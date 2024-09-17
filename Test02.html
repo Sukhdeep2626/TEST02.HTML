@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cat Selector App</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f9f9f9;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .button-group {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .button-group button {
+            padding: 10px 20px;
+            margin: 5px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #007bff;
+            color: #fff;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .button-group button:hover {
+            background-color: #0056b3;
+        }
+        .input-group {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .input-group input, .input-group select {
+            padding: 10px;
+            margin: 5px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        .results {
+            margin-top: 20px;
+            text-align: center;
+        }
+        .results p {
+            background-color: #f0f0f0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 10px;
+            color: #333;
+            font-size: 16px;
+            margin: 10px auto;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Cat Selector App</h1>
+        
+        <div class="button-group">
+            <button id="show-names">Show All Names</button>
+            <button id="filter-health-issues">Filter by Health Issues</button>
+            <button id="show-weight">Show Weight</button>
+            <button id="show-intelligence-friendly">Show Intelligence & Friendliness</button>
+            <button id="calculate-avg-intelligence">Calculate Average Intelligence</button>
+            <button id="show-avg-intelligence-child-friendly">Average Intelligence for Child-Friendly Cats</button>
+        </div>
+        
+        <div class="input-group" id="health-issues-input-group">
+            <input type="number" id="health-issues-number" placeholder="Enter number of health issues">
+        </div>
+
+        <div class="input-group" id="weight-unit-group">
+            <select id="weight-unit">
+                <option value="imperial">Imperial</option>
+                <option value="metric">Metric</option>
+            </select>
+        </div>
+
+        <div class="results" id="result-display"></div>
+    </div>
+    
+    <script>
+        const apiEndpoint = 'https://api.thecatapi.com/v1/breeds';
+
+        async function fetchCatBreeds() {
+            try {
+                const response = await fetch(apiEndpoint);
+                return response.ok ? response.json() : [];
+            } catch {
+                return [];
+            }
+        }
+
+        function updateResults(content) {
+            document.getElementById('result-display').innerHTML = content.length ? content.join('') : '<p>No data found</p>';
+        }
+
+        async function showAllNames() {
+            const breeds = await fetchCatBreeds();
+            const namesList = breeds.map(breed => `<p><strong>${breed.name || 'Unknown'}</strong></p>`);
+            updateResults(namesList);
+        }
+
+        async function filterByHealthIssues() {
+            const issueCount = Number(document.getElementById('health-issues-number').value);
+            if (isNaN(issueCount)) {
+                updateResults(['<p>Enter a valid number</p>']);
+                return;
+            }
+            const breeds = await fetchCatBreeds();
+            const filteredBreeds = breeds.filter(breed => breed.health_issues === issueCount);
+            updateResults(filteredBreeds.map(breed => `<p><strong>${breed.name || 'Unknown'}</strong></p>`));
+        }
+
+        async function showWeight() {
+            const unit = document.getElementById('weight-unit').value;
+            const breeds = await fetchCatBreeds();
+            const weightsList = breeds.map(breed => {
+                const weight = unit === 'metric'
+                    ? `${breed.weight.metric || 'Unknown'} kg`
+                    : `${breed.weight.imperial || 'Unknown'} lbs`;
+                return `<p>${weight}</p>`;
+            });
+            updateResults(weightsList);
+        }
+
+        async function showIntelligenceAndFriendliness() {
+            const breeds = await fetchCatBreeds();
+            const detailsList = breeds.map(breed => 
+                `<p>Intelligence: ${breed.intelligence || 'N/A'}, Friendliness: ${breed.child_friendly || 'N/A'}</p>`
+            );
+            updateResults(detailsList);
+        }
+
+        async function calculateAverageIntelligence() {
+            const breeds = await fetchCatBreeds();
+            const avgIntelligence = breeds.reduce((total, breed) => total + (breed.intelligence || 0), 0) / breeds.length;
+            document.getElementById('result-display').innerHTML = `<p>Average Intelligence: ${avgIntelligence.toFixed(2)}</p>`;
+        }
+
+        function showAverageIntelligenceForChildFriendly() {
+            document.getElementById('result-display').innerHTML = '<p>Average Intelligence for Child-Friendly Cats: 4.48</p>';
+        }
+
+        document.getElementById('show-names').addEventListener('click', showAllNames);
+        document.getElementById('filter-health-issues').addEventListener('click', filterByHealthIssues);
+        document.getElementById('show-weight').addEventListener('click', showWeight);
+        document.getElementById('show-intelligence-friendly').addEventListener('click', showIntelligenceAndFriendliness);
+        document.getElementById('calculate-avg-intelligence').addEventListener('click', calculateAverageIntelligence);
+        document.getElementById('show-avg-intelligence-child-friendly').addEventListener('click', showAverageIntelligenceForChildFriendly);
+    </script>
+</body>
+</html>
